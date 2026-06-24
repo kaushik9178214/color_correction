@@ -12,7 +12,9 @@ from segment import (
 )
 
 from color_correction import (
-    correct_garment_color
+    correct_garment_color,
+    palette_transfer_color,
+    reinhard_color_transfer
 )
 
 from clip_match import (
@@ -80,6 +82,28 @@ TXT_REPORT = os.path.join(
 # --------------------------------------------------
 # FIND REFERENCE
 # --------------------------------------------------
+
+def choose_correction_method():
+
+    print()
+    print("Choose Color Correction Method")
+    print("1. Mean Shift")
+    print("2. Palette Transfer")
+    print("3. Reinhard Transfer")
+    print()
+
+    choice = input(
+        "Enter choice (1/2/3): "
+    ).strip()
+
+    if choice == "2":
+        return "palette"
+    
+    if choice=="3":
+        return "reinhard"
+
+    return "mean"
+
 
 def find_reference(files):
 
@@ -168,6 +192,10 @@ def process_folder():
 
     results = []
 
+    correction_method = (
+        choose_correction_method()
+    )
+
     # --------------------------------
 
     for file in files:
@@ -190,12 +218,34 @@ def process_folder():
             cand_img
         )
 
-        corrected_img = correct_garment_color(
-            ref_img,
-            ref_mask,
-            cand_img,
-            cand_mask
-        )
+
+        if correction_method == "mean":
+            corrected_img = correct_garment_color(
+                ref_img,
+                ref_mask,
+                cand_img,
+                cand_mask
+            )
+
+        elif correction_method=="palette":
+             corrected_img = (
+                palette_transfer_color(
+                    ref_img,
+                    ref_mask,
+                    cand_img,
+                    cand_mask
+                )
+            )  
+
+        else:
+            corrected_img = (
+                reinhard_color_transfer(
+                    ref_img,
+                    ref_mask,
+                    cand_img,
+                    cand_mask
+                )
+            )    
 
         corrected_path = os.path.join(
             CORRECTED_DIR,
